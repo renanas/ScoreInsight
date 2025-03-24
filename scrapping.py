@@ -55,6 +55,7 @@ time.sleep(2)
 stats = {}
 try:
     stats_attack_element = driver.find_element(By.XPATH, '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[4]/div/div/div/div')
+    print(stats_attack_element)
     # Extrair as informações desejadas
     for i in range(1, 20):        
         key_xpath = f'/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[4]/div/div/div/div/div[{i}]/span[1]'
@@ -66,7 +67,35 @@ try:
     # Imprimir as informações extraídas
     for key, value in stats.items():
         print(f"{key}: {value}")
-    print("DEU CERTO")
+    print("ATAQUE DEU CERTO")
+except:
+    print(f"Erro ao encontrar o elemento: {e}")
+    driver.save_screenshot('error_screenshot.png')
+
+
+# Esperar até que o novo elemento com o XPath fornecido esteja clicável e clicar nele
+pass_button = WebDriverWait(driver, 10).until(
+    EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/button')) # Mudou apenas o div[5]
+)
+pass_button.click()
+
+time.sleep(2)
+
+stats = {}
+try:
+    stats_pass_element = driver.find_element(By.XPATH, '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/div/div/div')
+    # Extrair as informações desejadas
+    for i in range(1, 7):        
+        key_xpath = f'/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/div/div/div/div[{i}]/span[1]'
+        value_xpath = f'/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/div/div/div/div[{i}]/span[2]'
+        key = stats_pass_element.find_element(By.XPATH, key_xpath).text
+        value = stats_pass_element.find_element(By.XPATH, value_xpath).text
+        stats[key] = value
+
+    # Imprimir as informações extraídas
+    for key, value in stats.items():
+        print(f"{key}: {value}")
+    print("PASSE DEU CERTO")
 except:
     print(f"Erro ao encontrar o elemento: {e}")
     driver.save_screenshot('error_screenshot.png')
