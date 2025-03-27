@@ -6,104 +6,118 @@ import pyautogui
 import pandas as pd
 import time
 
-# Configurar o driver
-driver = webdriver.Chrome()
-
-# Maximizar a janela do navegador
-driver.maximize_window()
-
-# Dicionário com o nome do time e sua URL correspondente
-teams = {
-    "Real Madrid": "https://www.sofascore.com/pt/time/futebol/real-madrid/2829"
-}
-
-# Nome do time que queremos acessar
-team_name = "Real Madrid"
-url = teams[team_name]
-
-# Acessar a página do time diretamente
-driver.get(url)
-
-# Esperar que a página carregue completamente
-time.sleep(5)
-
-# Esperar até que o elemento com o XPath fornecido esteja clicável e clicar nele
-league_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, '//*[@id="__next"]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[1]/div/div[1]/button'))
+from utils.constants import  (
+    REAL_MADRID_XPATH,
+    LIGA_BUTTOM_STATISTIC_SESSION,
+    LIGA_SELECAO_STATISTIC_SESSION,
+    POSITION_SCORE_ALL_XPATH_BASE,
+    RESUME_XPATH_INFO,
+    ATTACK_BUTTOM_STATISTIC_SESSION,
+    ATTACK_XPATH_INFO,
+    PASSE_BUTTOM_STATISTIC_SESSION,
+    PASSE_XPATH_INFO,
 )
-league_button.click()
 
-time.sleep(2)
+def setup_driver():
+    """Configura o driver do Selenium."""
+    driver = webdriver.Chrome()
+    driver.maximize_window()
+    return driver
 
-# Esperar até que o novo elemento com o XPath fornecido esteja clicável e clicar nele
-league_select = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, '//*[@id="__next"]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[1]/div/div[1]/div/div/div[1]/div/ul/li[4]/div/div'))
-)
-league_select.click()
+def click_element(driver, xpath, timeout=10):
+    """Espera até que o elemento esteja clicável e clica nele."""
+    element = WebDriverWait(driver, timeout).until(
+        EC.element_to_be_clickable((By.XPATH, xpath))
+    )
+    element.click()
 
-# Esperar que o dropdown carregue
-time.sleep(2)
+def navigate_to_team_page(driver, team_name, teams):
+    """Navega para a página do time especificado."""
+    url = teams[team_name]
+    driver.get(url)
+    time.sleep(5)  # Esperar a página carregar completamente
 
-# Esperar até que o novo elemento com o XPath fornecido esteja clicável e clicar nele
-attack_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[4]/div/button'))
-)
-attack_button.click()
+def extract_stats(driver, xpath_base, num_elements, category):
+    stats = {}
+    try:
+        stats_element = driver.find_element(By.XPATH, xpath_base)
+        for i in range(1, num_elements + 1):
+            key_xpath = f'{xpath_base}/div[{i}]/span[1]'
+            value_xpath = f'{xpath_base}/div[{i}]/span[2]'
+            key = stats_element.find_element(By.XPATH, key_xpath).text
+            value = stats_element.find_element(By.XPATH, value_xpath).text
+            stats[key] = value
 
-time.sleep(2)
+        for key, value in stats.items():
+            print(f"{key}: {value}")
+        print(f"EXTRAÇÃO {category} DEU CERTO")
+    except Exception as e:
+        print(f"Erro ao encontrar o elemento: {e}")
+        driver.save_screenshot('error_screenshot.png')
+    return stats
 
-stats = {}
-try:
-    stats_attack_element = driver.find_element(By.XPATH, '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[4]/div/div/div/div')
-    print(stats_attack_element)
-    # Extrair as informações desejadas
-    for i in range(1, 20):        
-        key_xpath = f'/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[4]/div/div/div/div/div[{i}]/span[1]'
-        value_xpath = f'/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[4]/div/div/div/div/div[{i}]/span[2]'
-        key = stats_attack_element.find_element(By.XPATH, key_xpath).text
-        value = stats_attack_element.find_element(By.XPATH, value_xpath).text
+def extract_position(driver, position_all_xpath_base, category):
+    stats = {}
+    try:
+        value = driver.find_element(By.XPATH, position_all_xpath_base).text
+        key = "classificacao"
         stats[key] = value
 
-    # Imprimir as informações extraídas
-    for key, value in stats.items():
-        print(f"{key}: {value}")
-    print("ATAQUE DEU CERTO")
-except:
-    print(f"Erro ao encontrar o elemento: {e}")
-    driver.save_screenshot('error_screenshot.png')
+        for key, value in stats.items():
+            print(f"{key}: {value}")
+        print(f"EXTRAÇÃO {category} DEU CERTO")
+    except Exception as e:
+        print(f"Erro ao encontrar o elemento: {e}")
+        driver.save_screenshot('error_screenshot.png')
+    return stats
+
+def extract_team_stats(driver):
+    """Extrai as estatísticas do time."""
+    # Clicar no botão da liga
+    click_element(driver, LIGA_BUTTOM_STATISTIC_SESSION)
+    time.sleep(2)
+
+    # Selecionar a liga
+    click_element(driver, LIGA_SELECAO_STATISTIC_SESSION)
+    time.sleep(2)
+
+    # Extrair posição e pontuação do SofaScore
+    extract_position(driver, POSITION_SCORE_ALL_XPATH_BASE, "Position/Score")
+    time.sleep(2)
+
+    # Extrair estatísticas de Resumo da Temporada
+    extract_stats(driver, RESUME_XPATH_INFO, 4, "Resumo")
+    time.sleep(2)
+
+    # Clicar no botão de ataque e extrair estatísticas da Temporada
+    click_element(driver, ATTACK_BUTTOM_STATISTIC_SESSION)
+    extract_stats(driver, ATTACK_XPATH_INFO, 19, "Ataque")
+    time.sleep(2)
+
+    # Clicar no botão de passe e extrair estatísticas
+    click_element(driver, PASSE_BUTTOM_STATISTIC_SESSION)
+    extract_stats(driver, PASSE_XPATH_INFO, 6, "Passe")
+    time.sleep(2)
 
 
-# Esperar até que o novo elemento com o XPath fornecido esteja clicável e clicar nele
-pass_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/button')) # Mudou apenas o div[5]
-)
-pass_button.click()
+def main():
+    """Fluxo principal do script."""
+    driver = setup_driver()
 
-time.sleep(2)
+    try:
+        teams = {"Real Madrid": REAL_MADRID_XPATH}
+        team_name = "Real Madrid"
 
-stats = {}
-try:
-    stats_pass_element = driver.find_element(By.XPATH, '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/div/div/div')
-    # Extrair as informações desejadas
-    for i in range(1, 7):        
-        key_xpath = f'/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/div/div/div/div[{i}]/span[1]'
-        value_xpath = f'/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/div/div/div/div[{i}]/span[2]'
-        key = stats_pass_element.find_element(By.XPATH, key_xpath).text
-        value = stats_pass_element.find_element(By.XPATH, value_xpath).text
-        stats[key] = value
+        # Navegar para a página do time
+        navigate_to_team_page(driver, team_name, teams)
 
-    # Imprimir as informações extraídas
-    for key, value in stats.items():
-        print(f"{key}: {value}")
-    print("PASSE DEU CERTO")
-except:
-    print(f"Erro ao encontrar o elemento: {e}")
-    driver.save_screenshot('error_screenshot.png')
+        # Extrair estatísticas do time
+        extract_team_stats(driver)
+
+    finally:
+        # Fechar o navegador
+        driver.quit()
 
 
-time.sleep(5)
-# Esperar que o dropdown carregue
-time.sleep(2)
-
-# Fechar o navegador
-driver.quit()
+if __name__ == "__main__":
+    main()
