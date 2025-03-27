@@ -2,10 +2,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import pyautogui
-import pandas as pd
 import time
 
+from dto.teamStats import TeamStats
 from utils.constants import  (
     REAL_MADRID_XPATH,
     LIGA_BUTTOM_STATISTIC_SESSION,
@@ -16,6 +15,10 @@ from utils.constants import  (
     ATTACK_XPATH_INFO,
     PASSE_BUTTOM_STATISTIC_SESSION,
     PASSE_XPATH_INFO,
+    DEFENDING_BUTTOM_STATISTIC_SESSION,
+    DEFENDING_XPATH_INFO,
+    OTHERS_BUTTOM_STATISTIC_SESSION,
+    OTHERS_XPATH_INFO,
 )
 
 def setup_driver():
@@ -37,8 +40,7 @@ def navigate_to_team_page(driver, team_name, teams):
     driver.get(url)
     time.sleep(5)  # Esperar a página carregar completamente
 
-def extract_stats(driver, xpath_base, num_elements, category):
-    stats = {}
+def extract_stats(driver, xpath_base, num_elements, category, team_stats):
     try:
         stats_element = driver.find_element(By.XPATH, xpath_base)
         for i in range(1, num_elements + 1):
@@ -46,63 +48,60 @@ def extract_stats(driver, xpath_base, num_elements, category):
             value_xpath = f'{xpath_base}/div[{i}]/span[2]'
             key = stats_element.find_element(By.XPATH, key_xpath).text
             value = stats_element.find_element(By.XPATH, value_xpath).text
-            stats[key] = value
-
-        for key, value in stats.items():
-            print(f"{key}: {value}")
-        print(f"EXTRAÇÃO {category} DEU CERTO")
+            team_stats.add_stat(category, key, value)
     except Exception as e:
         print(f"Erro ao encontrar o elemento: {e}")
-        driver.save_screenshot('error_screenshot.png')
-    return stats
 
-def extract_position(driver, position_all_xpath_base, category):
-    stats = {}
+def extract_position(driver, position_all_xpath_base, category, team_stats):
     try:
         value = driver.find_element(By.XPATH, position_all_xpath_base).text
         key = "classificacao"
-        stats[key] = value
-
-        for key, value in stats.items():
-            print(f"{key}: {value}")
-        print(f"EXTRAÇÃO {category} DEU CERTO")
+        team_stats.add_stat(category, key, value)
     except Exception as e:
         print(f"Erro ao encontrar o elemento: {e}")
         driver.save_screenshot('error_screenshot.png')
-    return stats
 
-def extract_team_stats(driver):
+def extract_team_stats(driver, team_stats):
     """Extrai as estatísticas do time."""
     # Clicar no botão da liga
     click_element(driver, LIGA_BUTTOM_STATISTIC_SESSION)
-    time.sleep(2)
 
     # Selecionar a liga
     click_element(driver, LIGA_SELECAO_STATISTIC_SESSION)
-    time.sleep(2)
+    time.sleep(0.5)
 
     # Extrair posição e pontuação do SofaScore
-    extract_position(driver, POSITION_SCORE_ALL_XPATH_BASE, "Position/Score")
-    time.sleep(2)
+    extract_position(driver, POSITION_SCORE_ALL_XPATH_BASE, "Position/Score", team_stats)
 
-    # Extrair estatísticas de Resumo da Temporada
-    extract_stats(driver, RESUME_XPATH_INFO, 4, "Resumo")
-    time.sleep(2)
+    # Extrair estatísticas de RESUMO
+    extract_stats(driver, RESUME_XPATH_INFO, 4, "Resumo", team_stats)
 
-    # Clicar no botão de ataque e extrair estatísticas da Temporada
+    # Clicar no botão de ATAQUE e extrair estatísticas
     click_element(driver, ATTACK_BUTTOM_STATISTIC_SESSION)
-    extract_stats(driver, ATTACK_XPATH_INFO, 19, "Ataque")
-    time.sleep(2)
+    time.sleep(0.5)
+    extract_stats(driver, ATTACK_XPATH_INFO, 19, "Ataque", team_stats)
 
-    # Clicar no botão de passe e extrair estatísticas
+    # Clicar no botão de PASSE e extrair estatísticas
     click_element(driver, PASSE_BUTTOM_STATISTIC_SESSION)
-    extract_stats(driver, PASSE_XPATH_INFO, 6, "Passe")
+    time.sleep(0.5)
+    extract_stats(driver, PASSE_XPATH_INFO, 6, "Passe", team_stats)
+
+    # Clicar no botão de DEFENDENDO e extrair estatísticas
+    click_element(driver, DEFENDING_BUTTOM_STATISTIC_SESSION)
+    time.sleep(0.5)
+    extract_stats(driver, DEFENDING_XPATH_INFO, 13, "Defendendo", team_stats)
+
+    # Clicar no botão de OUTROS e extrair estatísticas
+    click_element(driver, OTHERS_BUTTOM_STATISTIC_SESSION)
+    time.sleep(0.5)
+    extract_stats(driver, OTHERS_XPATH_INFO, 10, "Outros", team_stats)
     time.sleep(2)
 
 
 def main():
     """Fluxo principal do script."""
     driver = setup_driver()
+    team_stats = TeamStats()
 
     try:
         teams = {"Real Madrid": REAL_MADRID_XPATH}
@@ -112,7 +111,10 @@ def main():
         navigate_to_team_page(driver, team_name, teams)
 
         # Extrair estatísticas do time
-        extract_team_stats(driver)
+        extract_team_stats(driver, team_stats)
+
+        # Exibir as estatísticas coletadas
+        team_stats.display_stats()
 
     finally:
         # Fechar o navegador

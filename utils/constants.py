@@ -7,3 +7,7 @@ ATTACK_BUTTOM_STATISTIC_SESSION = '/html/body/div[1]/main/div[2]/div/div[2]/div[
 ATTACK_XPATH_INFO = '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[4]/div/div/div/div'
 PASSE_BUTTOM_STATISTIC_SESSION = '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/button'
 PASSE_XPATH_INFO = '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[5]/div/div/div/div'
+DEFENDING_BUTTOM_STATISTIC_SESSION = '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[6]/div/button'
+DEFENDING_XPATH_INFO = '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[6]/div/div/div/div'
+OTHERS_BUTTOM_STATISTIC_SESSION = '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[7]/div/button'
+OTHERS_XPATH_INFO = '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[7]/div/div/div/div'
