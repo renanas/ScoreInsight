@@ -1,4 +1,5 @@
 REAL_MADRID_XPATH = "https://www.sofascore.com/pt/time/futebol/real-madrid/2829"
+BARCELONA_XPATH = "https://www.sofascore.com/pt/time/futebol/barcelona/2817"
 LIGA_BUTTOM_STATISTIC_SESSION = '//*[@id="__next"]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[1]/div/div[1]/button'
 LIGA_SELECAO_STATISTIC_SESSION = '//*[@id="__next"]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[1]/div/div[1]/div/div/div[1]/div/ul/li[4]/div/div'
 POSITION_SCORE_ALL_XPATH_BASE = '/html/body/div[1]/main/div[2]/div/div[2]/div[2]/div[3]/div[2]/div[2]/div/div[1]/span'
