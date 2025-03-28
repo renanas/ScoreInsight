@@ -7,7 +7,6 @@ from dto.teamStats import TeamStats
 from utils.constants import  (
     REAL_MADRID_XPATH,
     LIGA_BUTTOM_STATISTIC_SESSION,
-    LIGA_SELECAO_STATISTIC_SESSION,
     POSITION_SCORE_ALL_XPATH_BASE,
     RESUME_XPATH_INFO,
     ATTACK_BUTTOM_STATISTIC_SESSION,
@@ -24,6 +23,7 @@ from utils.constants import  (
     LEAGUE_TEAM_INFO,
     LEAGUE_TEAM_INFO_2,
     LEAGUE_TEAM_INFO_LAST_GAMES,
+    BARCELONA_XPATH,
 )
 
 import time
@@ -68,14 +68,14 @@ def extract_position(driver, position_all_xpath_base, category, team_stats):
         print(f"Erro ao encontrar o elemento: {e}")
         driver.save_screenshot('error_screenshot.png')
 
-def extract_team_stats(driver, team_stats):
-    """Extrai as estatísticas do time."""
+def extract_team_stats(driver, team_stats, competition_name="Supercopa de España"):
+    """Extrai as estatísticas do time para uma competição específica."""
     # Clicar no botão da liga
     click_element(driver, LIGA_BUTTOM_STATISTIC_SESSION)
-    time.sleep(0.5)
+    time.sleep(1)
 
-    # Selecionar a liga
-    click_element(driver, LIGA_SELECAO_STATISTIC_SESSION)
+    # Selecionar a competição desejada
+    select_competition(driver, competition_name)
     time.sleep(0.5)
 
     # Extrair posição e pontuação do SofaScore
@@ -104,6 +104,40 @@ def extract_team_stats(driver, team_stats):
     time.sleep(0.5)
     extract_stats(driver, OTHERS_XPATH_INFO, 10, "Outros", team_stats)
     time.sleep(2)
+
+def select_competition(driver, competition_name):
+    """
+    Seleciona a competição desejada no menu de competições.
+    
+    Args:
+        driver: Instância do Selenium WebDriver.
+        competition_name: Nome da competição a ser selecionada (ex: "Liga dos Campeões da UEFA").
+    """
+    try:
+        # Localizar o menu de competições
+        competition_menu = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//ul[@role='listbox']"))
+        )
+
+        # Localizar todas as opções de competições
+        competition_options = WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located((By.XPATH, ".//li[@role='option']"))
+        )
+        
+        # Percorrer as opções e selecionar a competição desejada
+        for option in competition_options:
+            print('Vezes que passou aqui')
+            competition_text = option.find_element(By.XPATH, ".//bdi").text
+            if competition_text == competition_name:
+                option.click()
+                print(f"Competição '{competition_name}' selecionada com sucesso.")
+                return
+
+        print(f"Competição '{competition_name}' não encontrada.")
+    except Exception as e:
+        print(f"Erro ao selecionar a competição: {e}")
+
+
 
 def extract_team_league(driver, team_stats):
     """Extrai as estatísticas do time."""
@@ -170,15 +204,14 @@ def extract_team_league_position(driver, team_xpath, team_stats, category="Leagu
     except Exception as e:
         print(f"Erro ao extrair informações da posição na liga: {e}")
 
-
 def main():
     """Fluxo principal do script."""
     driver = setup_driver()
     team_stats = TeamStats()
 
     try:
-        teams = {"Real Madrid": REAL_MADRID_XPATH}
-        team_name = "Real Madrid"
+        teams = {"Barcelona": BARCELONA_XPATH}
+        team_name = "Barcelona"
 
         # Navegar para a página do time
         navigate_to_team_page(driver, team_name, teams)
