@@ -47,7 +47,7 @@ def navigate_to_team_page(driver, team_name, teams):
     driver.get(url)
     time.sleep(5)  # Esperar a página carregar completamente
 
-def extract_stats(driver, xpath_base, num_elements, category, team_stats):
+def extract_resume_session_stats(driver, xpath_base, num_elements, category, team_stats):
     try:
         stats_element = driver.find_element(By.XPATH, xpath_base)
         for i in range(1, num_elements + 1):
@@ -68,7 +68,7 @@ def extract_position(driver, position_all_xpath_base, category, team_stats):
         print(f"Erro ao encontrar o elemento: {e}")
         driver.save_screenshot('error_screenshot.png')
 
-def extract_team_stats(driver, team_stats, competition_name="Liga dos Campeões da UEFA"):
+def extract_team_resume_session_stats(driver, team_stats, competition_name="Liga dos Campeões da UEFA"):
     """Extrai as estatísticas do time para uma competição específica."""
     # Clicar no botão da liga
     click_element(driver, LIGA_BUTTOM_STATISTIC_SESSION)
@@ -82,27 +82,27 @@ def extract_team_stats(driver, team_stats, competition_name="Liga dos Campeões 
     extract_position(driver, POSITION_SCORE_ALL_XPATH_BASE, "Position/Score", team_stats)
 
     # Extrair estatísticas de RESUMO
-    extract_stats(driver, RESUME_XPATH_INFO, 4, "Resumo", team_stats)
+    extract_resume_session_stats(driver, RESUME_XPATH_INFO, 4, "Resumo", team_stats)
 
     # Clicar no botão de ATAQUE e extrair estatísticas
     click_element(driver, ATTACK_BUTTOM_STATISTIC_SESSION)
     time.sleep(0.5)
-    extract_stats(driver, ATTACK_XPATH_INFO, 19, "Ataque", team_stats)
+    extract_resume_session_stats(driver, ATTACK_XPATH_INFO, 19, "Ataque", team_stats)
 
     # Clicar no botão de PASSE e extrair estatísticas
     click_element(driver, PASSE_BUTTOM_STATISTIC_SESSION)
     time.sleep(0.5)
-    extract_stats(driver, PASSE_XPATH_INFO, 6, "Passe", team_stats)
+    extract_resume_session_stats(driver, PASSE_XPATH_INFO, 6, "Passe", team_stats)
 
     # Clicar no botão de DEFENDENDO e extrair estatísticas
     click_element(driver, DEFENDING_BUTTOM_STATISTIC_SESSION)
     time.sleep(0.5)
-    extract_stats(driver, DEFENDING_XPATH_INFO, 13, "Defendendo", team_stats)
+    extract_resume_session_stats(driver, DEFENDING_XPATH_INFO, 13, "Defendendo", team_stats)
 
     # Clicar no botão de OUTROS e extrair estatísticas
     click_element(driver, OTHERS_BUTTOM_STATISTIC_SESSION)
     time.sleep(0.5)
-    extract_stats(driver, OTHERS_XPATH_INFO, 10, "Outros", team_stats)
+    extract_resume_session_stats(driver, OTHERS_XPATH_INFO, 10, "Outros", team_stats)
     time.sleep(2)
 
 def select_competition(driver, competition_name):
@@ -121,7 +121,6 @@ def select_competition(driver, competition_name):
         
         # Percorrer as opções e selecionar a competição desejada
         for option in competition_options:
-            print('Vezes que passou aqui')
             competition_text = option.find_element(By.XPATH, ".//bdi").text
             if competition_text == competition_name:
                 option.click()
@@ -134,7 +133,7 @@ def select_competition(driver, competition_name):
 
 
 
-def extract_team_league(driver, team_stats, league_name="Liga dos Campeões da UEFA"):
+def extract_team_league(driver, teams, team_stats, team_name, league_name="Liga dos Campeões da UEFA"):
     """
     Extrai as estatísticas do time para uma liga específica.
     
@@ -150,26 +149,40 @@ def extract_team_league(driver, team_stats, league_name="Liga dos Campeões da U
 
         # Selecionar a liga desejada
         select_competition(driver, league_name)
-        time.sleep(1)
+        time.sleep(0.5)
 
-        # Extrair posição e estatísticas do time na liga
-        extract_team_league_position(driver, REAL_MADRID_XPATH, team_stats)
+        team_xpath = teams[team_name]
+
+        # Extrair Extrair informações do time na liga em Todos os jogos
+        print('Extrair informações do time na liga em todos os jogos')
+        extract_team_league_position(driver, team_xpath, team_stats, "Todos")
+        time.sleep(0.5)
+
+        # Extrair informações do time na liga apenas dos jogos em Casa
+        click_element(driver, "/html/body/div[1]/main/div[2]/div/div[2]/div[1]/div[2]/div[1]/div[3]/div[1]/div[2]")
+        print('Extrair informações do time na liga apenas dos jogos em casa')
+        time.sleep(0.5)
+        extract_team_league_position(driver, team_xpath, team_stats, "Casa")
+
+        # Extrair informações do time na liga apenas dos jogos como Visitante
+        click_element(driver, "/html/body/div[1]/main/div[2]/div/div[2]/div[1]/div[2]/div[1]/div[3]/div[1]/div[3]")
+        print('Extrair informações do time na liga apenas dos jogos como Visitante')
+        time.sleep(0.5)
+        extract_team_league_position(driver, team_xpath, team_stats, "Visitante")
 
     except Exception as e:
         print(f"Erro ao extrair estatísticas da liga: {e}")
 
-def extract_team_league_position(driver, team_xpath, team_stats, category="League Position"):
+def extract_team_league_position(driver, team_xpath, team_stats, field, category="League Position"):
     """
     Extrai informações da posição do time na liga, incluindo:
-    posição, jogos, vitórias, empates, derrotas, saldo de gols, gols marcados/sofridos e pontuação.
+    posição, jogos, vitórias, empates, derrotas, saldo de gols, gols marcados/sofridos, pontuação e últimos jogos.
     """
     try:
-        time.sleep(2)
-        # Extrair apenas o caminho da URL (ex: /pt/time/futebol/real-madrid/2829)
+        # Localizar o elemento do time na tabela da liga
         parsed_url = urlparse(team_xpath)
         team_xpath_path = parsed_url.path
 
-        # Localizar o elemento do time na tabela da liga
         team_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, f"//a[@href='{team_xpath_path}']"))
         )
@@ -184,28 +197,28 @@ def extract_team_league_position(driver, team_xpath, team_stats, category="Leagu
         goals = team_element.find_elements(By.XPATH, LEAGUE_TEAM_INFO_2)[1].text
         points = team_element.find_elements(By.XPATH, LEAGUE_TEAM_INFO)[-1].text
 
-        # Adicionar as informações ao objeto TeamStats
-        team_stats.add_stat(category, "Posição", position)
-        team_stats.add_stat(category, "Jogos", games)
-        team_stats.add_stat(category, "Vitórias", wins)
-        team_stats.add_stat(category, "Empates", draws)
-        team_stats.add_stat(category, "Derrotas", losses)
-        team_stats.add_stat(category, "Saldo de Gols", goal_diff)
-        team_stats.add_stat(category, "Gols Marcados/Sofridos", goals)
-        team_stats.add_stat(category, "Pontuação", points)
+        # Adicionar as informações ao objeto TeamStats com o campo "field"
+        team_stats.add_stat(f"{category} - {field}", "Posição", position)
+        team_stats.add_stat(f"{category} - {field}", "Jogos", games)
+        team_stats.add_stat(f"{category} - {field}", "Vitórias", wins)
+        team_stats.add_stat(f"{category} - {field}", "Empates", draws)
+        team_stats.add_stat(f"{category} - {field}", "Derrotas", losses)
+        team_stats.add_stat(f"{category} - {field}", "Saldo de Gols", goal_diff)
+        team_stats.add_stat(f"{category} - {field}", "Gols Marcados/Sofridos", goals)
+        team_stats.add_stat(f"{category} - {field}", "Pontuação", points)
 
         # Extrair os últimos jogos (resultados e títulos)
         last_matches = team_element.find_elements(By.XPATH, LEAGUE_TEAM_INFO_LAST_GAMES)
         match_results = []
         for match in last_matches:
             title = match.get_attribute("title")  # Extrair o título do jogo
-            result = match.find_element(By.XPATH, ".//span").text  # Extrair o resultado (D ou V)
+            result = match.find_element(By.XPATH, ".//span").text  # Extrair o resultado (D, V ou E)
             match_results.append({"title": title, "result": result})
 
         # Adicionar os últimos jogos ao objeto TeamStats
-        team_stats.add_stat(category, "Últimos Jogos", match_results)
+        team_stats.add_stat(f"{category} - {field}", "Últimos Jogos", match_results)
 
-        print(f"Informações da posição na liga extraídas com sucesso para {team_xpath}.")
+        print(f"Informações da posição na liga extraídas com sucesso para {team_xpath} no contexto '{field}'.")
         time.sleep(2)
 
     except Exception as e:
@@ -217,17 +230,20 @@ def main():
     team_stats = TeamStats()
 
     try:
-        teams = {"Barcelona": BARCELONA_XPATH}
+        teams = {
+            "Barcelona": BARCELONA_XPATH,
+            "Real Madrid": REAL_MADRID_XPATH
+        }
         team_name = "Barcelona"
 
         # Navegar para a página do time
         navigate_to_team_page(driver, team_name, teams)
 
-         # Extrair estatísticas do time na liga
-        extract_team_league(driver, team_stats)
+        # Extrair estatísticas do time na liga
+        extract_team_league(driver, teams, team_stats, team_name)
 
-        # Extrair estatísticas do time
-        extract_team_stats(driver, team_stats)
+        # Extrair estatísticas de resumo do time
+        extract_team_resume_session_stats(driver, team_stats)
 
         # Exibir as estatísticas coletadas
         team_stats.display_stats()       
