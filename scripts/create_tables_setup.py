@@ -3,6 +3,18 @@ def create_tables(connectionDB):
     Cria as tabelas no banco de dados PostgreSQL.
     """
     commands = [
+        # Adicione o comando SQL para criar a tabela treinador na lista de comandos
+        """
+        CREATE TABLE IF NOT EXISTS coach (
+            id SERIAL PRIMARY KEY,               
+            id_sofascore INTEGER NOT NULL,       
+            name TEXT NOT NULL,                  
+            nationality TEXT,                    
+            games_played INTEGER,
+            performance TEXT,                
+            points INTEGER                       
+        )
+        """,
         # Tabela Club
         """
         CREATE TABLE IF NOT EXISTS club (
@@ -12,10 +24,12 @@ def create_tables(connectionDB):
             country TEXT NOT NULL,
             city TEXT,
             date_foundation DATE,
-            coach TEXT,
-            stadium TEXT
+            coach INTEGER, 
+            stadium TEXT,
+            xpath TEXT,
+            FOREIGN KEY (coach) REFERENCES coach (id) 
         )
-        """,
+        """,        
         # Tabela Tournament
         """
         CREATE TABLE IF NOT EXISTS tournament (
