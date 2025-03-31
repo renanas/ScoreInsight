@@ -6,6 +6,16 @@ from utils.constants import  (
     REAL_MADRID_XPATH,
     BARCELONA_XPATH,
 )
+from config.db_setup import Base, engine
+from models import Coach, Club, Tournament, TournamentClub  # Importe todos os modelos que você criou
+
+
+def create_tables():
+    """
+    Cria todas as tabelas no banco de dados.
+    """
+    Base.metadata.create_all(engine)
+    print("Tabelas criadas com sucesso!")
 
 def main():
     """Fluxo principal do script."""
