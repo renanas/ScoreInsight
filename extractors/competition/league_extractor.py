@@ -1,4 +1,4 @@
-from extractors.competition_extractor import select_competition
+from extractors.competition.competition_extractor import select_competition
 from utils import helpers
 from utils.helpers import click_element
 from utils.constants import (

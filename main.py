@@ -1,7 +1,7 @@
 from dto.team_stats import TeamStats
-from extractors.coach_extractor import extract_coach
-from extractors.league_extractor import extract_team_league
-from extractors.stats_extractor import extract_team_resume_session_stats
+from extractors.coach.coach_extractor import extract_coach
+from extractors.competition.league_extractor import extract_team_league
+from extractors.competition.stats_extractor import extract_team_resume_session_stats
 from utils import helpers
 from utils.constants import  (
     BAYERN_MUNICH_XPATH,
@@ -35,7 +35,7 @@ def main():
             "Bayern Munich": BAYERN_MUNICH_XPATH,
         }
 
-        team_name = "Barcelona"
+        team_name = "Real Madrid"
 
         # Navegar para a página do time
         helpers.navigate_to_team_page(driver, team_name, teams)
