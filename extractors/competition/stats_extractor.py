@@ -1,5 +1,5 @@
 from selenium.webdriver.common.by import By
-from extractors.competition_extractor import select_competition
+from extractors.competition.competition_extractor import select_competition
 from utils import helpers
 from utils.constants import  (
     LIGA_BUTTOM_STATISTIC_SESSION,
