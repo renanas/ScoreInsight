@@ -17,7 +17,7 @@ REAL_BETIS_XPATH = "https://www.sofascore.com/pt/time/futebol/real-betis/2816"
 ATLETICO_CLUB_BILBAO = "https://www.sofascore.com/pt/time/futebol/athletic-club/2825"
 
 # Times Alemaes
-BAYERN_MUNICH_XPATH = "https://www.sofascore.com/pt/time/futebol/fc-bayern-munchen/2672"
+BAYERN_MUNCHEN_XPATH = "https://www.sofascore.com/pt/time/futebol/fc-bayern-munchen/2672"
 BORUSSIA_DORTMUND_XPATH = "https://www.sofascore.com/pt/time/futebol/borussia-dortmund/2673"
 EINTRACHT_FRANKFURT_XPATH = "https://www.sofascore.com/pt/time/futebol/eintracht-frankfurt/2674"
 

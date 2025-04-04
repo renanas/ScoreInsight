@@ -4,7 +4,7 @@ from extractors.competition.league_extractor import extract_team_league
 from extractors.competition.stats_extractor import extract_team_resume_session_stats
 from utils import helpers
 from utils.constants import  (
-    BAYERN_MUNICH_XPATH,
+    BAYERN_MUNCHEN_XPATH,
     REAL_MADRID_XPATH,
     BARCELONA_XPATH,
 )
@@ -32,7 +32,7 @@ def main():
         teams = {
             "Barcelona": BARCELONA_XPATH,
             "Real Madrid": REAL_MADRID_XPATH,
-            "Bayern Munich": BAYERN_MUNICH_XPATH,
+            "Bayern Munchen": BAYERN_MUNCHEN_XPATH,
         }
 
         team_name = "Real Madrid"
