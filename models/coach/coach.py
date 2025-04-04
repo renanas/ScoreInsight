@@ -11,3 +11,5 @@ class Coach(Base):
     games_played = Column(Integer)
     performance = Column(String)
     points = Column(Integer)
+    formation = Column(String)
+    age = Column(Integer)
