@@ -2,6 +2,7 @@ from dto.team_stats import TeamStats
 from extractors.coach.coach_extractor import extract_coach
 from extractors.competition.league_extractor import extract_team_league
 from extractors.competition.stats_extractor import extract_team_resume_session_stats
+from extractors.games.last_games_extractor import click_last_game
 from utils import helpers
 from utils.constants import  (
     BAYERN_MUNCHEN_XPATH,
@@ -27,7 +28,8 @@ def main():
     # Flags para controle de extração
     flag_to_extract_league = False  # Define se deseja extrair estatísticas da liga
     flag_to_extract_resume_session = False  # Define se deseja extrair estatísticas de resumo da sessão
-    flag_to_extract_coach = True  # Define se deseja extrair estatísticas do treinador
+    flag_to_extract_coach = False  # Define se deseja extrair estatísticas do treinador
+    flag_to_extract_last_matchs = True  # Define se deseja extrair estatísticas dos últimos jogos
     try:
         teams = {
             "Barcelona": BARCELONA_XPATH,
@@ -35,7 +37,7 @@ def main():
             "Bayern Munchen": BAYERN_MUNCHEN_XPATH,
         }
 
-        team_name = "Real Madrid"
+        team_name = "Barcelona"
 
         # Navegar para a página do time
         helpers.navigate_to_team_page(driver, team_name, teams)
@@ -52,6 +54,9 @@ def main():
         if flag_to_extract_coach:
             # Extrair estatísticas do treinador
             extract_coach(driver, teams, team_name)
+
+        if flag_to_extract_last_matchs:
+            click_last_game(driver)
 
         # Exibir as estatísticas coletadas
         # team_stats.display_stats()       
