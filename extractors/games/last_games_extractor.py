@@ -48,7 +48,8 @@ def get_all_games(driver):
             driver.get(first_game_link)
             time.sleep(2)  # Esperar 2 segundos
             #get_game_info(driver)
-            get_game_minute_for_minute(driver)
+            #get_game_minute_for_minute(driver)
+            get_statistic_game_overview(driver)
         else:
             print("Nenhum jogo encontrado.")
               
@@ -172,3 +173,121 @@ def get_substitutions(driver):
     except Exception as e:
         print(f"Erro ao capturar substituições: {e}")
         return []
+    
+
+def get_statistic_game_overview(driver):
+    """
+    Captura as informações da visão geral da partida para ambas as equipes, separando os dados de dois contêineres diferentes.
+    
+    Args:
+        driver: Instância do Selenium WebDriver.
+    
+    Returns:
+        Um dicionário contendo as informações separadas de cada contêiner.
+    """
+    try:
+        # Lista de XPaths dos contêineres
+        containers_xpaths = [
+            "/html/body/div[1]/main/div[2]/div[2]/div[1]/div[1]/div[6]/div/div[2]/div[2]/div/div[1]/div[2]",
+            "/html/body/div[1]/main/div[2]/div[2]/div[1]/div[1]/div[6]/div/div[2]/div[2]/div/div[2]/div[2]",
+            "/html/body/div[1]/main/div[2]/div[2]/div[1]/div[1]/div[6]/div/div[2]/div[2]/div/div[3]/div[2]",
+            "/html/body/div[1]/main/div[2]/div[2]/div[1]/div[1]/div[6]/div/div[2]/div[2]/div/div[4]/div[2]",
+            "/html/body/div[1]/main/div[2]/div[2]/div[1]/div[1]/div[6]/div/div[2]/div[2]/div/div[5]/div[2]",
+            "/html/body/div[1]/main/div[2]/div[2]/div[1]/div[1]/div[6]/div/div[2]/div[2]/div/div[6]/div[2]",
+            "/html/body/div[1]/main/div[2]/div[2]/div[1]/div[1]/div[6]/div/div[2]/div[2]/div/div[7]/div[2]"
+        ]
+        
+        # Dicionários para armazenar as informações de cada contêiner
+        overview_container_1 = {}
+        overview_container_2 = {}
+        overview_container_3 = {}
+        overview_container_4 = {}
+        overview_container_5 = {}
+        overview_container_6 = {}
+        overview_container_7 = {}
+
+        # Iterar sobre os XPaths e capturar as informações
+        for index, xpath_base in enumerate(containers_xpaths):
+            try:
+                # Rolar a página para garantir que os elementos estejam visíveis
+                driver.execute_script("window.scrollBy(0, 700);")
+                time.sleep(1)
+
+                # Localizar o contêiner principal pelo XPath
+                stats_container = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, xpath_base))
+                )
+                print(f"stats_container encontrado para {xpath_base}: {stats_container is not None}")
+                
+                # Localizar todas as seções de estatísticas dentro do contêiner
+                stat_sections = stats_container.find_elements(By.XPATH, ".//div[contains(@class, 'Box Flex cWGKPx dsybxc')]")
+                print(f"stat_sections encontrados no contêiner {xpath_base}: {len(stat_sections)}")
+                
+                # Capturar as estatísticas do contêiner atual
+                container_data = {}
+                for section in stat_sections:
+                    try:
+                        # Capturar o nome da estatística (ex.: "Posse de bola", "Gols esperados (xG)")
+                        stat_name_element = section.find_element(By.XPATH, ".//span[contains(@class, 'Text lluFbU')]")
+                        stat_name = stat_name_element.text.strip()
+                        
+                        # Capturar os valores para os dois times
+                        left_value_element = section.find_element(By.XPATH, ".//bdi[contains(@class, 'Box hKQtHc')]//span")
+                        right_value_element = section.find_element(By.XPATH, ".//bdi[contains(@class, 'Box fIiFyn')]//span")
+                        left_value = left_value_element.text.strip()
+                        right_value = right_value_element.text.strip()
+                        
+                        # Adicionar ao dicionário do contêiner atual
+                        container_data[stat_name] = {
+                            "left_team": left_value,
+                            "right_team": right_value
+                        }
+                    except Exception as e:
+                        print(f"Erro ao capturar uma estatística no contêiner {xpath_base}: {e}")
+                        continue
+                
+                # Armazenar os dados no dicionário correspondente
+                if index == 0:
+                    overview_container_1 = container_data
+                elif index == 1:
+                    overview_container_2 = container_data
+                elif index == 2:
+                    overview_container_3 = container_data
+                elif index == 3:
+                    overview_container_4 = container_data
+                elif index == 4:
+                    overview_container_5 = container_data
+                elif index == 5:
+                    overview_container_6 = container_data
+                elif index == 6:
+                    overview_container_7 = container_data
+
+            except Exception as e:
+                print(f"Erro ao processar o contêiner {xpath_base}: {e}")
+                continue
+        
+        # Printar as informações capturadas de cada contêiner
+        print("Informações do Contêiner 1:", overview_container_1)
+        print("Informações do Contêiner 2:", overview_container_2)
+        print("Informações do Contêiner 3:", overview_container_3)
+        print("Informações do Contêiner 4:", overview_container_4)
+        print("Informações do Contêiner 5:", overview_container_5)
+        print("Informações do Contêiner 6:", overview_container_6)
+        print("Informações do Contêiner 7:", overview_container_7)
+        
+        # Retornar os dados separados
+        return {
+            "container_1": overview_container_1,
+            "container_2": overview_container_2,
+            "container_3": overview_container_3,
+            "container_4": overview_container_4,
+            "container_5": overview_container_5,
+            "container_6": overview_container_6,
+            "container_7": overview_container_7
+        }
+
+    except Exception as e:
+        print(f"Erro ao capturar a visão geral da partida: {e}")
+        return {}
+    
+    
