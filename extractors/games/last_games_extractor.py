@@ -22,38 +22,25 @@ def get_all_games(driver):
         driver: Instância do Selenium WebDriver.
     """
     try:
-        # Localizar todos os elementos de jogos pelo XPath
-        game_elements = WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.XPATH, "//a[@data-testid='event_cell']"))
+         # Busca todos os jogos dentro do bloco de partidas
+        games = WebDriverWait(driver, 10).until(
+            EC.presence_of_all_elements_located((
+                By.XPATH,
+                "//div[contains(@class, 'Box Flex ggRYVx iWGVcA')]//a[contains(@href, '/pt/football/match/')]"
+            ))
         )
-        
-        # Extrair os hrefs de cada elemento
-        game_links = [game.get_attribute("href") for game in game_elements]
-        
-        print(f"Total de jogos encontrados: {len(game_links)}")
-        '''
-        # Navegar para cada link e esperar 2 segundos
-        for link in game_links:
-            print(f"Navegando para o jogo: {link}")
-            driver.get(link)
-            # Esperar 2 segundos em cada página
-            time.sleep(2)
-            #get_game_info(driver)
-            get_game_minute_for_minute(driver)
-        '''
-        
-        if game_links:
-            # Navegar para o primeiro link
-            first_game_link = game_links[0]
-            print(f"Navegando para o primeiro jogo: {first_game_link}")
-            driver.get(first_game_link)
+        if games:
+            first_link = games[0].get_attribute("href")
+            print(f"Primeiro link de jogo encontrado: {first_link}")
+            driver.get(first_link)
             time.sleep(2)  # Esperar 2 segundos
             #get_game_info(driver)
             #get_game_minute_for_minute(driver)
-            get_statistic_game_overview_by_link(driver, first_game_link)
+            get_statistic_game_overview_by_link(driver, first_link)
+            return first_link            
         else:
             print("Nenhum jogo encontrado.")
-              
+                      
 
     except Exception as e:
         print(f"Erro ao navegar pelos jogos: {e}")
