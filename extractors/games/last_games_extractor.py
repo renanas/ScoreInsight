@@ -34,9 +34,9 @@ def get_all_games(driver):
             print(f"Primeiro link de jogo encontrado: {first_link}")
             driver.get(first_link)
             time.sleep(2)  # Esperar 2 segundos
-            #get_game_info(driver)
+            get_game_info(driver)
             #get_game_minute_for_minute(driver)
-            get_statistic_game_overview_by_link(driver, first_link)
+            #get_statistic_game_overview_by_link(driver, first_link)
             return first_link            
         else:
             print("Nenhum jogo encontrado.")
@@ -56,44 +56,47 @@ def get_game_info(driver):
         Um dicionário contendo as informações do jogo.
     """
     try:
-        # Capturar a data e hora da partida
-        date_time_element = driver.find_element(By.XPATH, "//div[@class='d_flex ai_center br_lg bg-c_surface.s2 py_xs px_sm mb_xs h_[26px]']")
-        date_time_text = date_time_element.text.split("\n")  # Exemplo: "05/03/2025\n17:00"
-        game_date = date_time_text[0].strip()
-        game_time = date_time_text[1].strip()
+        # Nome dos times
+        left_team = driver.find_element(By.XPATH, "//bdi[1]").text.strip()
+        right_team = driver.find_element(By.XPATH, "//bdi[2]").text.strip()
 
-        # Capturar os nomes dos times
-        left_team_element = driver.find_element(By.XPATH, "//div[@data-testid='left_team']//bdi")
-        right_team_element = driver.find_element(By.XPATH, "//div[@data-testid='right_team']//bdi")
-        left_team_name = left_team_element.text.strip()
-        right_team_name = right_team_element.text.strip()
+        # Placar
+        scores = driver.find_elements(By.XPATH, "//span[contains(@class, 'textStyle_display.extraLarge')]")
+        left_score = scores[0].text.strip() if len(scores) > 0 else ""
+        right_score = scores[2].text.strip() if len(scores) > 1 else ""
 
-        # Capturar o resultado do jogo
-        left_score_element = driver.find_element(By.XPATH, "//span[@data-testid='left_score']")
-        right_score_element = driver.find_element(By.XPATH, "//span[@data-testid='right_score']")
-        left_score = left_score_element.text.strip()
-        right_score = right_score_element.text.strip()
+        # Goleadores do time da esquerda
+        left_scorers = [span.text.strip() for span in driver.find_elements(
+            By.XPATH, "//div[contains(@class, 'ai_flex-end')]//span[contains(@class, 'textStyle_body.small')]"
+        )]
 
-        # Capturar os gols (se houver)
-        scorer_elements = driver.find_elements(By.XPATH, "//div[@data-testid='scorer_list']//span")
-        scorers = [scorer.text.strip() for scorer in scorer_elements]
+        # Goleadores do time da direita
+        right_scorers = [span.text.strip() for span in driver.find_elements(
+            By.XPATH, "//div[contains(@class, 'ai_flex-start')]//span[contains(@class, 'textStyle_body.small')]"
+        )]
 
-        # Retornar as informações como um dicionário
-        game_info = {
-            "date": game_date,
-            "time": game_time,
-            "left_team": left_team_name,
-            "right_team": right_team_name,
+        set_left = set(left_scorers)
+        set_right = set(right_scorers)  
+
+        # Pega apenas os nomes únicos de cada lado
+        unique_left = list(set_left)
+        unique_right = list(set_right - set_left)
+
+        print(f"Time da esquerda: {left_team}, Placar: {left_score}")
+        print(f"Time da direita: {right_team}, Placar: {right_score}")
+        print(f"Goleadores únicos do time da esquerda: {unique_left}")
+        print(f"Goleadores únicos do time da direita: {unique_right}")
+
+        return {
+            "left_team": left_team,
+            "right_team": right_team,
             "left_score": left_score,
             "right_score": right_score,
-            "scorers": scorers,
+            "left_scorers": left_scorers,
+            "right_scorers": right_scorers,
         }
-
-        print("Informações do jogo capturadas:", game_info)
-        return game_info
-
     except Exception as e:
-        print(f"Erro ao capturar as informações do jogo: {e}")
+        print(f"Erro ao extrair informações do jogo: {e}")
         return {}
     
 
