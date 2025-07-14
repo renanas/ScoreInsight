@@ -34,7 +34,7 @@ def get_all_games(driver):
             print(f"Primeiro link de jogo encontrado: {first_link}")
             driver.get(first_link)
             time.sleep(2)  # Esperar 2 segundos
-            get_game_info(driver)
+            #get_game_info(driver)
             #get_game_minute_for_minute(driver)
             #get_statistic_game_overview_by_link(driver, first_link)
             return first_link            
@@ -102,68 +102,69 @@ def get_game_info(driver):
 
 def get_game_minute_for_minute(driver):
     try:
-        get_substitutions(driver)
+        eventos = extract_all_events_from_all_blocks(driver)
+        for evento in eventos:
+            print(evento)  
+        
     except Exception as e:
         print(f"Erro ao capturar as informações do jogo minuto a minuto: {e}")
         return {}
     
-
-def get_substitutions(driver):
+def extract_all_events_from_all_blocks(driver):
     """
-    Captura os nomes dos jogadores envolvidos em substituições (times esquerdo e direito) e o minuto do evento.
-    
-    Args:
-        driver: Instância do Selenium WebDriver.
-    
-    Returns:
-        Uma lista de dicionários contendo os nomes dos jogadores e o minuto da substituição.
+    Extrai todos os eventos de todos os blocos <div class="pb_sm"> da página.
+    Retorna uma lista de dicionários com minuto, tipo, jogadores e descrição.
     """
-    try:
-        # Localizar todos os elementos de substituições
-        substitution_elements = driver.find_elements(By.XPATH, "//div[@cursor='pointer' and contains(@class, 'Box cbmnyx')]")
-        
-        substitutions = []
-        for substitution in substitution_elements:
+    all_events = []
+    # Encontra todos os blocos de eventos
+    blocks = driver.find_elements(By.XPATH, "//div[contains(@class, 'pb_sm')]")
+    for block in blocks:
+        event_blocks = block.find_elements(By.XPATH, ".//div[contains(@class, 'hover:bg_surface.s2')]")
+        for event in event_blocks:
             try:
-                # Capturar o minuto do evento
-                minute_element = substitution.find_element(By.XPATH, ".//div[contains(@class, 'Text falluO')]")
-                minute = minute_element.text.strip()
+                # Minuto
+                minute = ""
+                try:
+                    minute = event.find_element(By.XPATH, ".//span[contains(@class, 'textStyle_display.micro')]").text.strip()
+                except Exception:
+                    pass
 
-                # Capturar os jogadores do time esquerdo
-                player_elements_left = substitution.find_elements(By.XPATH, ".//span[contains(@class, 'Text dGsLCg') or contains(@class, 'Text iBaaGe')]")
-                players_left = [player.text.strip() for player in player_elements_left]
+                # Tipo do evento (svg/title)
+                event_type = ""
+                try:
+                    svg = event.find_element(By.XPATH, ".//svg")
+                    event_type = svg.find_element(By.XPATH, "./title").get_attribute("textContent").strip()
+                except Exception:
+                    pass
 
-                # Capturar os jogadores do time direito
-                player_elements_right = substitution.find_elements(By.XPATH, ".//span[contains(@class, 'Text isFvDP') or contains(@class, 'Text dgNapt')]")
-                players_right = [player.text.strip() for player in player_elements_right]
+                # Jogadores e descrição (spans)
+                players = []
+                description = ""
+                spans = event.find_elements(By.XPATH, ".//span[contains(@class, 'textStyle_body.medium')]")
+                if len(spans) == 1:
+                    players = [spans[0].text.strip()]
+                elif len(spans) >= 2:
+                    players = [spans[0].text.strip()]
+                    description = spans[1].text.strip()
+                    # Substituição: normalmente dois jogadores
+                    if "Substituição" in event_type or (len(spans) > 2 and spans[2].text.strip()):
+                        players = [spans[0].text.strip(), spans[1].text.strip()]
+                        description = "Substituição"
 
-                # Adicionar substituições do time esquerdo
-                if len(players_left) == 2:
-                    substitutions.append({
-                        "minute": minute,  # Minuto do evento
-                        "team": "left",  # Time esquerdo
-                        "player_out": players_left[1],  # Jogador que saiu
-                        "player_in": players_left[0],  # Jogador que entrou
-                    })
+                # Se description estiver vazio, tenta pegar do svg
+                if not description and event_type:
+                    description = event_type
 
-                # Adicionar substituições do time direito
-                if len(players_right) == 2:
-                    substitutions.append({
-                        "minute": minute,  # Minuto do evento
-                        "team": "right",  # Time direito
-                        "player_out": players_right[1],  # Jogador que saiu
-                        "player_in": players_right[0],  # Jogador que entrou
-                    })
+                all_events.append({
+                    "minute": minute,
+                    "type": event_type,
+                    "players": players,
+                    "description": description
+                })
             except Exception as e:
-                print(f"Erro ao capturar uma substituição: {e}")
+                print(f"Erro ao processar evento: {e}")
                 continue
-
-        print("Substituições capturadas:", substitutions)
-        return substitutions
-
-    except Exception as e:
-        print(f"Erro ao capturar substituições: {e}")
-        return [] 
+    return all_events
 
 def get_statistic_game_overview_by_link(driver, first_game_link):
     """
