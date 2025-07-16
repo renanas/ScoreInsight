@@ -1,4 +1,6 @@
 import time
+import json
+from models.game.game import Game
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -34,9 +36,25 @@ def get_all_games(driver):
             print(f"Primeiro link de jogo encontrado: {first_link}")
             driver.get(first_link)
             time.sleep(2)  # Esperar 2 segundos
-            #get_game_info(driver)
-            #get_game_minute_for_minute(driver)
-            #get_statistic_game_overview_by_link(driver, first_link)
+            game_info = get_game_info(driver)
+            game_minute_actions = get_game_minute_for_minute(driver)
+            game_statistic_overview = get_statistic_game_overview_by_link(driver, first_link)
+            game_id = first_link.split("#id:")[-1]
+            
+            info_str = json.dumps(game_info, ensure_ascii=False)
+            actions_str = json.dumps(game_minute_actions, ensure_ascii=False)
+            statistics_str = json.dumps(game_statistic_overview, ensure_ascii=False)
+
+            game = Game(
+                    id=int(game_id),
+                    link=first_link,
+                    info=info_str,
+                    actions=actions_str,
+                    statistics=statistics_str
+                )
+            
+            print(f"Jogo capturado: {game.id}, Link: {game.link}")
+            
             return first_link            
         else:
             print("Nenhum jogo encontrado.")
@@ -104,7 +122,9 @@ def get_game_minute_for_minute(driver):
     try:
         eventos = extract_all_events_from_all_blocks(driver)
         for evento in eventos:
-            print(evento)  
+            print(evento) 
+            
+        return eventos 
         
     except Exception as e:
         print(f"Erro ao capturar as informações do jogo minuto a minuto: {e}")
@@ -219,6 +239,7 @@ def get_statistic_game_overview_by_link(driver, first_game_link):
         # Printar os dados capturados
         for item in all_data:
             print(f"Período: {item['period']}, Grupo: {item['group_name']}, Item: {item['item_name']}, Time da Casa: {item['home_team_value']}, Time de Fora: {item['away_team_value']}")
+        return all_data
 
     except Exception as e:
         print(f"Erro ao gerar a URL de estatísticas: {e}")
