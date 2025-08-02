@@ -24,12 +24,13 @@ def main():
     """Fluxo principal do script."""
     driver = helpers.setup_driver()
     team_stats = TeamStats()
+    create_tables()
 
     # Flags para controle de extração
-    flag_to_extract_league = False  # Define se deseja extrair estatísticas da liga
-    flag_to_extract_resume_session = False  # Define se deseja extrair estatísticas de resumo da sessão
-    flag_to_extract_coach = False  # Define se deseja extrair estatísticas do treinador
-    flag_to_extract_last_matchs = True  # Define se deseja extrair estatísticas dos últimos jogos
+    flag_to_extract_league = False  
+    flag_to_extract_resume_session = False  
+    flag_to_extract_coach = False  
+    flag_to_extract_last_matchs = True  
     try:
         teams = {
             "Barcelona": BARCELONA_XPATH,

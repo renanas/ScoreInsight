@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
+from repository.game_repository import save_game
 import requests
 
 def click_last_game(driver):
@@ -33,9 +34,8 @@ def get_all_games(driver):
         )
         if games:
             first_link = games[0].get_attribute("href")
-            print(f"Primeiro link de jogo encontrado: {first_link}")
             driver.get(first_link)
-            time.sleep(2)  # Esperar 2 segundos
+            time.sleep(2)  
             game_info = get_game_info(driver)
             game_minute_actions = get_game_minute_for_minute(driver)
             game_statistic_overview = get_statistic_game_overview_by_link(driver, first_link)
@@ -46,14 +46,18 @@ def get_all_games(driver):
             statistics_str = json.dumps(game_statistic_overview, ensure_ascii=False)
 
             game = Game(
-                    id=int(game_id),
+                    id=game_id,
                     link=first_link,
                     info=info_str,
                     actions=actions_str,
-                    statistics=statistics_str
+                    statistics=statistics_str,
+                    time_home=game_info.get("left_team"),
+                    time_away=game_info.get("right_team")
                 )
             
             print(f"Jogo capturado: {game.id}, Link: {game.link}")
+
+            save_game(game)
             
             return first_link            
         else:
@@ -92,6 +96,7 @@ def get_game_info(driver):
         right_scorers = [span.text.strip() for span in driver.find_elements(
             By.XPATH, "//div[contains(@class, 'ai_flex-start')]//span[contains(@class, 'textStyle_body.small')]"
         )]
+        print(f"Left scorers: {left_scorers}")
 
         set_left = set(left_scorers)
         set_right = set(right_scorers)  
